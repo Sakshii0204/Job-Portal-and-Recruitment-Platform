@@ -1,0 +1,22 @@
+{
+  "name": "job-portal-and-recruitment-platform",
+  "version": "1.0.0",
+  "description": "Full-stack Job Portal and Recruitment Platform - Phase 1 Foundation & Authentication",
+  "private": true,
+  "scripts": {
+    "install:all": "npm install && npm --prefix backend install && npm --prefix frontend install",
+    "backend": "npm --prefix backend run dev",
+    "frontend": "npm --prefix frontend run dev"
+  },
+  "keywords": [
+    "job-portal",
+    "recruitment-platform",
+    "react",
+    "express",
+    "mysql",
+    "jwt",
+    "bcrypt"
+  ],
+  "author": "Sakshii0204",
+  "license": "ISC"
+}
