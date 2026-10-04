@@ -28,12 +28,23 @@ const Navbar = () => {
 
         <nav className="navbar-nav">
           <Link to="/" className="nav-link">Home</Link>
+          <Link to="/jobs" className="nav-link">Find Jobs</Link>
 
           {isAuthenticated ? (
             <div className="nav-auth-group">
               <Link to={dashboardPath} className="nav-link dashboard-link">
                 Dashboard
               </Link>
+              {role === 'CANDIDATE' && (
+                <>
+                  <Link to="/candidate/profile" className="nav-link">
+                    My Profile
+                  </Link>
+                  <Link to="/candidate/applications" className="nav-link">
+                    Applications
+                  </Link>
+                </>
+              )}
               <div className="user-profile-badge">
                 <span className={`role-pill role-${role ? role.toLowerCase() : 'user'}`}>
                   {role}
@@ -55,6 +66,7 @@ const Navbar = () => {
             </div>
           )}
         </nav>
+
       </div>
     </header>
   );

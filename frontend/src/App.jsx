@@ -12,6 +12,10 @@ import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import CandidateDashboard from './pages/CandidateDashboard';
+import CandidateProfile from './pages/CandidateProfile';
+import MyApplications from './pages/MyApplications';
+import Jobs from './pages/Jobs';
+import JobDetails from './pages/JobDetails';
 import RecruiterDashboard from './pages/RecruiterDashboard';
 import Unauthorized from './pages/Unauthorized';
 import NotFound from './pages/NotFound';
@@ -27,6 +31,8 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/jobs" element={<Jobs />} />
+            <Route path="/jobs/:id" element={<JobDetails />} />
             <Route path="/unauthorized" element={<Unauthorized />} />
 
             {/* Candidate Protected Routes */}
@@ -35,6 +41,22 @@ function App() {
               element={
                 <ProtectedRoute allowedRoles={['CANDIDATE']}>
                   <CandidateDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/candidate/profile"
+              element={
+                <ProtectedRoute allowedRoles={['CANDIDATE']}>
+                  <CandidateProfile />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/candidate/applications"
+              element={
+                <ProtectedRoute allowedRoles={['CANDIDATE']}>
+                  <MyApplications />
                 </ProtectedRoute>
               }
             />
@@ -58,5 +80,6 @@ function App() {
     </Router>
   );
 }
+
 
 export default App;
