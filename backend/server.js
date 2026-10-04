@@ -10,6 +10,8 @@ const healthRoutes = require('./routes/healthRoutes');
 const authRoutes = require('./routes/authRoutes');
 const candidateRoutes = require('./routes/candidateRoutes');
 const recruiterRoutes = require('./routes/recruiterRoutes');
+const jobRoutes = require('./routes/jobRoutes');
+const applicationRoutes = require('./routes/applicationRoutes');
 const { notFoundHandler, errorHandler } = require('./middleware/errorMiddleware');
 
 const app = express();
@@ -33,7 +35,7 @@ app.get('/', (req, res) => {
     success: true,
     message: 'Job Portal and Recruitment Platform API is active',
     version: '1.0.0',
-    phase: 'Phase 1 - Project Foundation & Authentication'
+    phase: 'Phase 2 - Candidate Module'
   });
 });
 
@@ -42,6 +44,9 @@ app.use('/api', healthRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/candidate', candidateRoutes);
 app.use('/api/recruiter', recruiterRoutes);
+app.use('/api/jobs', jobRoutes);
+app.use('/api/applications', applicationRoutes);
+
 
 // Error Handling Middlewares
 app.use(notFoundHandler);
