@@ -29,3 +29,42 @@ export const checkHealth = async () => {
   const response = await API.get('/health');
   return response.data;
 };
+
+// ================= Phase 2: Candidate Profile =================
+export const getCandidateProfile = async () => {
+  const response = await API.get('/candidate/profile');
+  return response.data;
+};
+
+export const updateCandidateProfile = async (profileData) => {
+  const response = await API.put('/candidate/profile', profileData);
+  return response.data;
+};
+
+// ================= Phase 2: Jobs =================
+export const getJobs = async (params = {}) => {
+  const response = await API.get('/jobs', { params });
+  return response.data;
+};
+
+export const getJobById = async (id) => {
+  const response = await API.get(`/jobs/${id}`);
+  return response.data;
+};
+
+// ================= Phase 2: Applications =================
+export const applyForJob = async (applicationData) => {
+  const response = await API.post('/applications', applicationData);
+  return response.data;
+};
+
+export const getMyApplications = async () => {
+  const response = await API.get('/applications/my');
+  return response.data;
+};
+
+export const checkJobApplicationStatus = async (jobId) => {
+  const response = await API.get(`/applications/status/${jobId}`);
+  return response.data;
+};
+
