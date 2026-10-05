@@ -148,6 +148,204 @@ class JobModel {
     const [rows] = await pool.execute(query, [id]);
     return rows[0] || null;
   }
+
+  /**
+   * Create a new job listing for a recruiter
+   */
+  static async createJob({
+    recruiterId,
+    title,
+    company_name,
+    description,
+    required_skills,
+    location,
+    job_type,
+    work_mode,
+    experience_required,
+    min_salary,
+    max_salary,
+    deadline,
+    status = 'ACTIVE'
+  }) {
+    const query = `
+      INSERT INTO jobs (
+        recruiter_id, title, company_name, description, required_skills,
+        location, job_type, work_mode, experience_required, min_salary,
+        max_salary, deadline, status
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `;
+    const values = [
+      recruiterId,
+      title.trim(),
+      company_name.trim(),
+      description.trim(),
+      required_skills ? required_skills.trim() : null,
+      location.trim(),
+      job_type.toUpperCase(),
+      work_mode.toUpperCase(),
+      experience_required ? experience_required.trim() : null,
+      min_salary !== undefined && min_salary !== null && min_salary !== '' ? Number(min_salary) : null,
+      max_salary !== undefined && max_salary !== null && max_salary !== '' ? Number(max_salary) : null,
+      deadline || null,
+      status || 'ACTIVE'
+    ];
+
+    const [result] = await pool.execute(query, values);
+    return this.findById(result.insertId);
+  }
+
+  /**
+   * Find all jobs belonging to a specific recruiter with application counts
+   */
+  static async findByRecruiterId(recruiterId) {
+    const query = `
+      SELECT 
+        j.id,
+        j.recruiter_id,
+        j.title,
+        j.company_name,
+        j.description,
+        j.required_skills,
+        j.location,
+        j.job_type,
+        j.work_mode,
+        j.experience_required,
+        j.min_salary,
+        j.max_salary,
+        j.deadline,
+        j.status,
+        j.created_at,
+        j.updated_at,
+        COUNT(a.id) AS application_count
+      FROM jobs j
+      LEFT JOIN applications a ON j.id = a.job_id
+      WHERE j.recruiter_id = ?
+      GROUP BY j.id
+      ORDER BY j.created_at DESC
+    `;
+    const [rows] = await pool.execute(query, [recruiterId]);
+    return rows;
+  }
+
+  /**
+   * Find single job by ID verifying recruiter ownership
+   */
+  static async findByIdAndRecruiter(id, recruiterId) {
+    const query = `
+      SELECT 
+        j.id,
+        j.recruiter_id,
+        j.title,
+        j.company_name,
+        j.description,
+        j.required_skills,
+        j.location,
+        j.job_type,
+        j.work_mode,
+        j.experience_required,
+        j.min_salary,
+        j.max_salary,
+        j.deadline,
+        j.status,
+        j.created_at,
+        j.updated_at,
+        COUNT(a.id) AS application_count
+      FROM jobs j
+      LEFT JOIN applications a ON j.id = a.job_id
+      WHERE j.id = ? AND j.recruiter_id = ?
+      GROUP BY j.id
+      LIMIT 1
+    `;
+    const [rows] = await pool.execute(query, [id, recruiterId]);
+    return rows[0] || null;
+  }
+
+  /**
+   * Update job fields verifying recruiter ownership
+   */
+  static async updateJob(id, recruiterId, updateData) {
+    const allowedFields = [
+      'title', 'company_name', 'description', 'required_skills',
+      'location', 'job_type', 'work_mode', 'experience_required',
+      'min_salary', 'max_salary', 'deadline', 'status'
+    ];
+
+    const fields = [];
+    const values = [];
+
+    for (const key of allowedFields) {
+      if (updateData[key] !== undefined) {
+        fields.push(`${key} = ?`);
+        let val = updateData[key];
+        if (key === 'job_type' || key === 'work_mode' || key === 'status') {
+          val = val ? val.toUpperCase() : val;
+        } else if (key === 'min_salary' || key === 'max_salary') {
+          val = val !== null && val !== '' && !isNaN(val) ? Number(val) : null;
+        } else if (typeof val === 'string') {
+          val = val.trim();
+        }
+        values.push(val);
+      }
+    }
+
+    if (fields.length === 0) {
+      return this.findByIdAndRecruiter(id, recruiterId);
+    }
+
+    values.push(id, recruiterId);
+    const query = `
+      UPDATE jobs 
+      SET ${fields.join(', ')}, updated_at = CURRENT_TIMESTAMP
+      WHERE id = ? AND recruiter_id = ?
+    `;
+
+    const [result] = await pool.execute(query, values);
+    if (result.affectedRows === 0) return null;
+    return this.findByIdAndRecruiter(id, recruiterId);
+  }
+
+  /**
+   * Set status to CLOSED for a job owned by recruiter
+   */
+  static async closeJob(id, recruiterId) {
+    const query = `
+      UPDATE jobs 
+      SET status = 'CLOSED', updated_at = CURRENT_TIMESTAMP
+      WHERE id = ? AND recruiter_id = ?
+    `;
+    const [result] = await pool.execute(query, [id, recruiterId]);
+    return result.affectedRows > 0;
+  }
+
+  /**
+   * Delete a job owned by recruiter
+   */
+  static async deleteJob(id, recruiterId) {
+    const query = `DELETE FROM jobs WHERE id = ? AND recruiter_id = ?`;
+    const [result] = await pool.execute(query, [id, recruiterId]);
+    return result.affectedRows > 0;
+  }
+
+  /**
+   * Aggregate job counts for a recruiter
+   */
+  static async getRecruiterJobStats(recruiterId) {
+    const query = `
+      SELECT 
+        COUNT(*) AS total_jobs,
+        SUM(CASE WHEN status = 'ACTIVE' THEN 1 ELSE 0 END) AS active_jobs,
+        SUM(CASE WHEN status = 'CLOSED' THEN 1 ELSE 0 END) AS closed_jobs
+      FROM jobs
+      WHERE recruiter_id = ?
+    `;
+    const [rows] = await pool.execute(query, [recruiterId]);
+    return {
+      totalJobs: Number(rows[0]?.total_jobs || 0),
+      activeJobs: Number(rows[0]?.active_jobs || 0),
+      closedJobs: Number(rows[0]?.closed_jobs || 0)
+    };
+  }
 }
 
 module.exports = JobModel;
+

@@ -68,3 +68,55 @@ export const checkJobApplicationStatus = async (jobId) => {
   return response.data;
 };
 
+// ================= Phase 3: Recruiter Module =================
+export const getRecruiterStats = async () => {
+  const response = await API.get('/recruiter/dashboard/stats');
+  return response.data;
+};
+
+export const createRecruiterJob = async (jobData) => {
+  const response = await API.post('/recruiter/jobs', jobData);
+  return response.data;
+};
+
+export const getRecruiterJobs = async () => {
+  const response = await API.get('/recruiter/jobs');
+  return response.data;
+};
+
+export const getRecruiterJobById = async (id) => {
+  const response = await API.get(`/recruiter/jobs/${id}`);
+  return response.data;
+};
+
+export const updateRecruiterJob = async (id, jobData) => {
+  const response = await API.put(`/recruiter/jobs/${id}`, jobData);
+  return response.data;
+};
+
+export const closeRecruiterJob = async (id) => {
+  const response = await API.put(`/recruiter/jobs/${id}/close`);
+  return response.data;
+};
+
+export const deleteRecruiterJob = async (id) => {
+  const response = await API.delete(`/recruiter/jobs/${id}`);
+  return response.data;
+};
+
+export const getJobApplicants = async (jobId) => {
+  const response = await API.get(`/recruiter/jobs/${jobId}/applications`);
+  return response.data;
+};
+
+export const getApplicationDetails = async (id) => {
+  const response = await API.get(`/recruiter/applications/${id}`);
+  return response.data;
+};
+
+export const updateApplicationStatus = async (id, status) => {
+  const response = await API.put(`/recruiter/applications/${id}/status`, { status });
+  return response.data;
+};
+
+
