@@ -2,7 +2,7 @@
 
 A modern full-stack web application designed for candidate job searching and recruiter talent acquisition, developed systematically in structured phases.
 
-> **Current Status**: **Phase 1, Phase 2, Phase 3 & Phase 4 Complete** (API Hardening & Security Active)  
+> **Current Status**: **Phase 1, Phase 2, Phase 3, Phase 4 & Phase 5 Complete** (Internship Submission & Deployment Ready)  
 > **Repository**: [https://github.com/Sakshii0204/Job-Portal-and-Recruitment-Platform](https://github.com/Sakshii0204/Job-Portal-and-Recruitment-Platform)  
 > **Developer**: Sakshii0204
 
@@ -16,7 +16,7 @@ This platform connects candidates seeking career opportunities with recruiters h
 - **Phase 2 (Completed)**: Complete Candidate Module — Profile Management, Jobs Database, Server-Side Search & Filtering, Job Details, One-Click Application Submission, Duplicate Prevention, and Application Tracking.
 - **Phase 3 (Completed)**: Complete Recruiter Module — Dashboard Analytics, Job Posting & Management, Applicant Review Pipeline, Status Lifecycle (`PENDING` -> `SHORTLISTED` -> `ACCEPTED` / `REJECTED`), and Strict Cross-Recruiter Ownership Enforcement.
 - **Phase 4 (Completed)**: API Hardening, Validation, Security Headers, Rate Limiting, Centralized Error Handling, ID/Pagination Bounds, and Automated Security Test Suite (29/29 checks passed).
-- **Phase 5 (Upcoming)**: Advanced Cloud Deployment, CI/CD, and Production Performance Tuning.
+- **Phase 5 (Completed)**: UI/UX Final Polish, Responsive Mobile Optimization, Deployment Readiness (CORS & Configurable Environments), and Master End-to-End Business Flow Suite (16/16 checks passed).
 
 ---
 
@@ -198,11 +198,17 @@ Automated test suites verify Phase 1, Phase 2, and Phase 3:
 - **Database Error Sanitization**: Error handler masks internal SQL/database connection errors in API responses (`A database error occurred. Please try again later.`), preventing stack trace and credential disclosure.
 - **Client Identity Spoofing Protection**: Enforced server-side extraction of user IDs (`req.user.id`) from verified JWT tokens across all candidate and recruiter endpoints.
 
+### Phase 5 — Final Polish, UX & Deployment Readiness
+- **Complete Visual Consistency**: Harmonized typography, badges, action buttons, and loading states across both candidate and recruiter portals.
+- **Responsive Layout Optimization**: Fully responsive across mobile, tablet, and desktop viewports (`320px` to `1920px`) with touch-friendly tables and flexible grids.
+- **Deployment Configuration**: Added `frontend/.env.example` with `VITE_API_URL` and decoupled API endpoints from hardcoded hosts.
+- **End-to-End Business Flow Suite**: Created and verified `backend/test/finalE2EWorkflow.test.js` validating the full cross-role hiring lifecycle.
+
 ---
 
 ## 🧪 Testing & Verification
 
-Automated test suites verify Phase 1, Phase 2, Phase 3, and Phase 4:
+Automated test suites verify Phase 1, Phase 2, Phase 3, Phase 4, and Phase 5:
 
 ```bash
 # Run Phase 2 Candidate Workflow Test
@@ -213,39 +219,17 @@ node backend/test/phase3Workflow.test.js
 
 # Run Phase 4 Master Security & Hardening Test (29 Checks)
 node backend/test/phase4Security.test.js
+
+# Run Phase 5 Final End-to-End Business Flow Test (16 Checks)
+node backend/test/finalE2EWorkflow.test.js
 ```
 
-### Verified Phase 4 Security Test Matrix:
-- [x] Register valid candidate (201 Created)
-- [x] Register valid recruiter (201 Created)
-- [x] Duplicate email rejection (409 Conflict)
-- [x] Invalid email format rejection (400 Bad Request)
-- [x] Weak password rejection (400 Bad Request)
-- [x] Missing token on protected endpoint (401 Unauthorized)
-- [x] Tampered/invalid JWT rejection (401 Unauthorized)
-- [x] Malformed auth header rejection (401 Unauthorized)
-- [x] Candidate accessing recruiter endpoints blocked (403 Forbidden)
-- [x] Recruiter accessing candidate endpoints blocked (403 Forbidden)
-- [x] Recruiter A vs Recruiter B job ownership boundary (403 Forbidden)
-- [x] Recruiter A vs Recruiter B application ownership boundary (403 Forbidden)
-- [x] Empty job title validation (400 Bad Request)
-- [x] Negative salary validation (400 Bad Request)
-- [x] Min salary > max salary validation (400 Bad Request)
-- [x] Invalid job type enum validation (400 Bad Request)
-- [x] Invalid work mode enum validation (400 Bad Request)
-- [x] Invalid application status enum validation (400 Bad Request)
-- [x] Invalid ID parameter validation (400 Bad Request for non-integer & negative values)
-- [x] Pagination safety capped (limit capped to max 50)
-- [x] Duplicate application blocked (409 Conflict)
-- [x] Apply to closed job blocked (400 Bad Request)
-- [x] Recruiter applying as candidate blocked (403 Forbidden)
-- [x] Candidate application data isolation (Tenant separated)
-- [x] SQL injection pattern in search/filter safely handled
-- [x] Malformed query parameters safe fallback (200 OK)
-- [x] Frontend recruiter_id spoofing ignored (strictly bound to JWT req.user.id)
-- [x] Ownership bypass attempt in status update blocked (403 Forbidden)
-- [x] HTTP Security Headers verified (nosniff, DENY, x-powered-by suppressed)
-- [x] Frontend production build compiles with zero errors
+### Verified Phase 5 Test Matrix:
+- [x] Phase 2 Candidate Workflow (7/7 checks passed)
+- [x] Phase 3 Recruiter Workflow & Cross-Role Ownership (25/25 checks passed)
+- [x] Phase 4 Security, Hardening & Parameter Validation (29/29 checks passed)
+- [x] Phase 5 Master End-to-End Hiring Lifecycle (16/16 checks passed)
+- [x] Frontend Production Build compiles with zero errors
 
 ---
 
