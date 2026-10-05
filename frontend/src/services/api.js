@@ -20,7 +20,7 @@ API.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Response interceptor to handle unauthorized errors centrally
+// Response interceptor to handle unauthorized and network errors centrally
 API.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -31,6 +31,14 @@ API.interceptors.response.use(
         localStorage.removeItem('user');
       }
     }
+
+    // Format human-friendly error messages if server is unreachable
+    if (!error.response) {
+      error.friendlyMessage = 'Unable to connect to the server. Please check your internet connection.';
+    } else {
+      error.friendlyMessage = error.response.data?.message || 'An unexpected error occurred.';
+    }
+
     return Promise.reject(error);
   }
 );

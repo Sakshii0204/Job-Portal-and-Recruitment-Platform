@@ -2,7 +2,7 @@
 
 A modern full-stack web application designed for candidate job searching and recruiter talent acquisition, developed systematically in structured phases.
 
-> **Current Status**: **Phase 1, Phase 2 & Phase 3 Complete** (Recruiter Module Active)  
+> **Current Status**: **Phase 1, Phase 2, Phase 3 & Phase 4 Complete** (API Hardening & Security Active)  
 > **Repository**: [https://github.com/Sakshii0204/Job-Portal-and-Recruitment-Platform](https://github.com/Sakshii0204/Job-Portal-and-Recruitment-Platform)  
 > **Developer**: Sakshii0204
 
@@ -15,8 +15,8 @@ This platform connects candidates seeking career opportunities with recruiters h
 - **Phase 1 (Completed)**: Project Foundation, MySQL Database, JWT Authentication, Bcrypt Hashing, Role-Based Access Control (RBAC), and Dashboards.
 - **Phase 2 (Completed)**: Complete Candidate Module — Profile Management, Jobs Database, Server-Side Search & Filtering, Job Details, One-Click Application Submission, Duplicate Prevention, and Application Tracking.
 - **Phase 3 (Completed)**: Complete Recruiter Module — Dashboard Analytics, Job Posting & Management, Applicant Review Pipeline, Status Lifecycle (`PENDING` -> `SHORTLISTED` -> `ACCEPTED` / `REJECTED`), and Strict Cross-Recruiter Ownership Enforcement.
-- **Phase 4 (Upcoming)**: Interview Scheduling, Notification Workflows, and Email Alerts.
-- **Phase 5 (Upcoming)**: Advanced Filters, Admin Controls, and Cloud Deployment.
+- **Phase 4 (Completed)**: API Hardening, Validation, Security Headers, Rate Limiting, Centralized Error Handling, ID/Pagination Bounds, and Automated Security Test Suite (29/29 checks passed).
+- **Phase 5 (Upcoming)**: Advanced Cloud Deployment, CI/CD, and Production Performance Tuning.
 
 ---
 
@@ -188,37 +188,63 @@ Register (Role: RECRUITER)
 
 Automated test suites verify Phase 1, Phase 2, and Phase 3:
 
+### Phase 4 — API Hardening, Validation & Security
+- **Strict Parameter & ID Validation**: Centralized `validateId` enforces positive integers (`1` to `2147483647`), gracefully rejecting malformed, negative, or string inputs with clear `400 Bad Request`.
+- **Pagination Boundary Protection**: Server-side pagination capping limit to max `50` records and enforcing min page `1` to protect against DoS attacks.
+- **HTTP Security Headers**: Native middleware enforcing `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `X-XSS-Protection`, `Referrer-Policy`, and suppressing `X-Powered-By`.
+- **In-Memory Rate Limiting**: Token-bucket rate limiter guarding `/api/auth/register` and `/api/auth/login` (50 requests/15 mins per IP) with automatic `429 Too Many Requests` and `Retry-After` header.
+- **Request Body Size Limits**: Restricted incoming Express JSON and urlencoded payloads to `1mb` to prevent payload flood attacks.
+- **SQL Injection Prevention**: 100% prepared parameterized SQL queries across all filters, searches, and IDs.
+- **Database Error Sanitization**: Error handler masks internal SQL/database connection errors in API responses (`A database error occurred. Please try again later.`), preventing stack trace and credential disclosure.
+- **Client Identity Spoofing Protection**: Enforced server-side extraction of user IDs (`req.user.id`) from verified JWT tokens across all candidate and recruiter endpoints.
+
+---
+
+## 🧪 Testing & Verification
+
+Automated test suites verify Phase 1, Phase 2, Phase 3, and Phase 4:
+
 ```bash
 # Run Phase 2 Candidate Workflow Test
 node backend/test/phase2Workflow.test.js
 
 # Run Phase 3 Recruiter Workflow Test
 node backend/test/phase3Workflow.test.js
+
+# Run Phase 4 Master Security & Hardening Test (29 Checks)
+node backend/test/phase4Security.test.js
 ```
 
-### Verified Phase 3 Test Matrix:
-- [x] Recruiter A & Recruiter B independent registration and JWT authentication
-- [x] Recruiter A dashboard isolated statistics
-- [x] Recruiter A job creation with `req.user.id` binding
-- [x] Recruiter A retrieves own jobs with real application counts
-- [x] Recruiter A edits own job posting
-- [x] Candidate applies to Job A (Status: `PENDING`)
-- [x] Recruiter A views applicants for Job A
-- [x] Recruiter A views detailed candidate profile & resume links
-- [x] Recruiter A updates status: `PENDING` -> `SHORTLISTED` -> `ACCEPTED`
-- [x] Candidate *My Applications* reflects `ACCEPTED` status
-- [x] **Recruiter B edit Job A**: Blocked (`403 Forbidden`)
-- [x] **Recruiter B view applicants of Job A**: Blocked (`403 Forbidden`)
-- [x] **Recruiter B view applicant details**: Blocked (`403 Forbidden`)
-- [x] **Recruiter B update application status**: Blocked (`403 Forbidden`)
-- [x] **Recruiter B close Job A**: Blocked (`403 Forbidden`)
-- [x] **Recruiter B delete Job A**: Blocked (`403 Forbidden`)
-- [x] Candidate accessing recruiter endpoints blocked (`403 Forbidden`)
-- [x] Recruiter accessing candidate profile endpoints blocked (`403 Forbidden`)
-- [x] Recruiter A closes Job A (`status = 'CLOSED'`)
-- [x] Application to closed job blocked (`400 Bad Request`)
-- [x] Application history preserved after job closure
-- [x] Invalid status transition rejected (`400 Bad Request`)
+### Verified Phase 4 Security Test Matrix:
+- [x] Register valid candidate (201 Created)
+- [x] Register valid recruiter (201 Created)
+- [x] Duplicate email rejection (409 Conflict)
+- [x] Invalid email format rejection (400 Bad Request)
+- [x] Weak password rejection (400 Bad Request)
+- [x] Missing token on protected endpoint (401 Unauthorized)
+- [x] Tampered/invalid JWT rejection (401 Unauthorized)
+- [x] Malformed auth header rejection (401 Unauthorized)
+- [x] Candidate accessing recruiter endpoints blocked (403 Forbidden)
+- [x] Recruiter accessing candidate endpoints blocked (403 Forbidden)
+- [x] Recruiter A vs Recruiter B job ownership boundary (403 Forbidden)
+- [x] Recruiter A vs Recruiter B application ownership boundary (403 Forbidden)
+- [x] Empty job title validation (400 Bad Request)
+- [x] Negative salary validation (400 Bad Request)
+- [x] Min salary > max salary validation (400 Bad Request)
+- [x] Invalid job type enum validation (400 Bad Request)
+- [x] Invalid work mode enum validation (400 Bad Request)
+- [x] Invalid application status enum validation (400 Bad Request)
+- [x] Invalid ID parameter validation (400 Bad Request for non-integer & negative values)
+- [x] Pagination safety capped (limit capped to max 50)
+- [x] Duplicate application blocked (409 Conflict)
+- [x] Apply to closed job blocked (400 Bad Request)
+- [x] Recruiter applying as candidate blocked (403 Forbidden)
+- [x] Candidate application data isolation (Tenant separated)
+- [x] SQL injection pattern in search/filter safely handled
+- [x] Malformed query parameters safe fallback (200 OK)
+- [x] Frontend recruiter_id spoofing ignored (strictly bound to JWT req.user.id)
+- [x] Ownership bypass attempt in status update blocked (403 Forbidden)
+- [x] HTTP Security Headers verified (nosniff, DENY, x-powered-by suppressed)
 - [x] Frontend production build compiles with zero errors
 
 ---

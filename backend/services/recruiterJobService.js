@@ -1,4 +1,5 @@
 const JobModel = require('../models/jobModel');
+const { validateId } = require('../utils/paramValidation');
 
 const VALID_JOB_TYPES = ['FULL_TIME', 'PART_TIME', 'INTERNSHIP', 'CONTRACT'];
 const VALID_WORK_MODES = ['REMOTE', 'HYBRID', 'ONSITE'];
@@ -121,9 +122,14 @@ class RecruiterJobService {
    */
   static async createJob(recruiterId, data) {
     this.validateJobData(data, false);
+    // Explicitly delete any client-sent recruiter_id / recruiterId to guarantee binding to verified JWT user
+    const cleanData = { ...data };
+    delete cleanData.recruiter_id;
+    delete cleanData.recruiterId;
+
     return JobModel.createJob({
-      recruiterId,
-      ...data
+      ...cleanData,
+      recruiterId
     });
   }
 
@@ -138,13 +144,9 @@ class RecruiterJobService {
    * Get single job by ID verifying ownership
    */
   static async getJobById(jobId, recruiterId) {
-    if (!jobId || isNaN(jobId)) {
-      const error = new Error('Invalid job ID');
-      error.statusCode = 400;
-      throw error;
-    }
+    const validId = validateId(jobId, 'job ID');
 
-    const job = await JobModel.findById(Number(jobId));
+    const job = await JobModel.findById(validId);
     if (!job) {
       const error = new Error('Job not found');
       error.statusCode = 404;
@@ -157,7 +159,7 @@ class RecruiterJobService {
       throw error;
     }
 
-    return JobModel.findByIdAndRecruiter(Number(jobId), recruiterId);
+    return JobModel.findByIdAndRecruiter(validId, recruiterId);
   }
 
   /**

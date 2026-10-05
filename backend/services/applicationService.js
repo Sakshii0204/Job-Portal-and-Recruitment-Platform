@@ -1,5 +1,6 @@
 const ApplicationModel = require('../models/applicationModel');
 const JobModel = require('../models/jobModel');
+const { validateId } = require('../utils/paramValidation');
 
 const isValidUrl = (string) => {
   if (!string || typeof string !== 'string') return true;
@@ -18,14 +19,10 @@ class ApplicationService {
    * Submit a new job application
    */
   static async apply({ jobId, candidateId, coverLetter, resumeUrl }) {
-    if (!jobId || isNaN(jobId)) {
-      const error = new Error('A valid Job ID is required');
-      error.statusCode = 400;
-      throw error;
-    }
+    const validJobId = validateId(jobId, 'job ID');
 
     // 1. Verify job exists
-    const job = await JobModel.findById(Number(jobId));
+    const job = await JobModel.findById(validJobId);
     if (!job) {
       const error = new Error('Job not found');
       error.statusCode = 404;
@@ -95,13 +92,9 @@ class ApplicationService {
    * Fetch single application belonging to candidate
    */
   static async getApplicationById(id, candidateId) {
-    if (!id || isNaN(id)) {
-      const error = new Error('Invalid application ID');
-      error.statusCode = 400;
-      throw error;
-    }
+    const validId = validateId(id, 'application ID');
 
-    const application = await ApplicationModel.findApplicationById(Number(id), candidateId);
+    const application = await ApplicationModel.findApplicationById(validId, candidateId);
     if (!application) {
       const error = new Error('Application not found or unauthorized');
       error.statusCode = 404;

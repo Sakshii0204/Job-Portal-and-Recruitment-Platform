@@ -1,5 +1,6 @@
 const ApplicationModel = require('../models/applicationModel');
 const JobModel = require('../models/jobModel');
+const { validateId } = require('../utils/paramValidation');
 
 const ALLOWED_STATUSES = ['PENDING', 'SHORTLISTED', 'REJECTED', 'ACCEPTED'];
 
@@ -8,14 +9,10 @@ class RecruiterApplicationService {
    * Fetch all applicants for a specific job owned by recruiter
    */
   static async getJobApplicants(jobId, recruiterId) {
-    if (!jobId || isNaN(jobId)) {
-      const error = new Error('Invalid job ID');
-      error.statusCode = 400;
-      throw error;
-    }
+    const validJobId = validateId(jobId, 'job ID');
 
     // 1. Verify job exists
-    const job = await JobModel.findById(Number(jobId));
+    const job = await JobModel.findById(validJobId);
     if (!job) {
       const error = new Error('Job not found');
       error.statusCode = 404;
@@ -30,7 +27,7 @@ class RecruiterApplicationService {
     }
 
     // 3. Fetch applicants
-    const applications = await ApplicationModel.findApplicationsByJobAndRecruiter(Number(jobId), recruiterId);
+    const applications = await ApplicationModel.findApplicationsByJobAndRecruiter(validJobId, recruiterId);
     return {
       job: {
         id: job.id,
@@ -47,18 +44,14 @@ class RecruiterApplicationService {
    * Fetch single applicant & application details verifying ownership
    */
   static async getApplicationDetails(applicationId, recruiterId) {
-    if (!applicationId || isNaN(applicationId)) {
-      const error = new Error('Invalid application ID');
-      error.statusCode = 400;
-      throw error;
-    }
+    const validAppId = validateId(applicationId, 'application ID');
 
-    const application = await ApplicationModel.findApplicationByIdAndRecruiter(Number(applicationId), recruiterId);
+    const application = await ApplicationModel.findApplicationByIdAndRecruiter(validAppId, recruiterId);
     if (!application) {
       // Check if application exists at all to return 403 vs 404
       const [rows] = await require('../config/db').pool.execute(
         'SELECT a.id, j.recruiter_id FROM applications a JOIN jobs j ON a.job_id = j.id WHERE a.id = ?',
-        [applicationId]
+        [validAppId]
       );
       if (rows.length > 0) {
         const error = new Error('Forbidden: This application belongs to another recruiter');
@@ -78,11 +71,7 @@ class RecruiterApplicationService {
    * Update application status (SHORTLISTED, REJECTED, ACCEPTED, PENDING)
    */
   static async updateApplicationStatus(applicationId, recruiterId, status) {
-    if (!applicationId || isNaN(applicationId)) {
-      const error = new Error('Invalid application ID');
-      error.statusCode = 400;
-      throw error;
-    }
+    const validAppId = validateId(applicationId, 'application ID');
 
     if (!status || !ALLOWED_STATUSES.includes(status.toUpperCase())) {
       const error = new Error(`Status must be one of: ${ALLOWED_STATUSES.join(', ')}`);
@@ -91,10 +80,10 @@ class RecruiterApplicationService {
     }
 
     // Verify ownership
-    await this.getApplicationDetails(applicationId, recruiterId);
+    await this.getApplicationDetails(validAppId, recruiterId);
 
     // Update status
-    const updated = await ApplicationModel.updateStatus(Number(applicationId), recruiterId, status);
+    const updated = await ApplicationModel.updateStatus(validAppId, recruiterId, status);
     return updated;
   }
 }

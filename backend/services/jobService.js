@@ -1,4 +1,5 @@
 const JobModel = require('../models/jobModel');
+const { validateId, validatePagination, sanitizeQueryString } = require('../utils/paramValidation');
 
 class JobService {
   /**
@@ -12,17 +13,18 @@ class JobService {
       workMode,
       experience,
       minSalary,
-      maxSalary,
-      page,
-      limit
+      maxSalary
     } = query;
 
+    // Validate and cap pagination values safely
+    const { page, limit } = validatePagination(query);
+
     const result = await JobModel.findAll({
-      search,
-      location,
-      jobType,
-      workMode,
-      experience,
+      search: sanitizeQueryString(search, 100),
+      location: sanitizeQueryString(location, 100),
+      jobType: sanitizeQueryString(jobType, 50),
+      workMode: sanitizeQueryString(workMode, 50),
+      experience: sanitizeQueryString(experience, 50),
       minSalary,
       maxSalary,
       page,
@@ -36,13 +38,9 @@ class JobService {
    * Fetch single job by ID
    */
   static async getJobById(id) {
-    if (!id || isNaN(id)) {
-      const error = new Error('Invalid job ID');
-      error.statusCode = 400;
-      throw error;
-    }
+    const validId = validateId(id, 'job ID');
 
-    const job = await JobModel.findById(Number(id));
+    const job = await JobModel.findById(validId);
     if (!job) {
       const error = new Error('Job not found');
       error.statusCode = 404;
