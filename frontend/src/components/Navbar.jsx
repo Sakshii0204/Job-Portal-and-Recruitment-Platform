@@ -45,6 +45,16 @@ const Navbar = () => {
                   </Link>
                 </>
               )}
+              {role === 'RECRUITER' && (
+                <>
+                  <Link to="/recruiter/jobs" className="nav-link">
+                    My Jobs
+                  </Link>
+                  <Link to="/recruiter/jobs/create" className="nav-link">
+                    Post Job
+                  </Link>
+                </>
+              )}
               <div className="user-profile-badge">
                 <span className={`role-pill role-${role ? role.toLowerCase() : 'user'}`}>
                   {role}
